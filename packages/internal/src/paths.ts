@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 
 import findUp from 'findup-sync'
+import glob from 'glob'
 
 import { getConfig } from './config'
 
@@ -227,4 +228,21 @@ export const ensurePosixPath = (path: string) => {
   }
 
   return posixPath
+}
+
+export const importServices = (): Record<string, unknown> => {
+  const files = glob
+    .sync(getPaths().api.services + '/**/*.{js,ts}', {
+      cwd: getPaths().base,
+    })
+    .filter((n) => !n.includes('.test.')) // ignore `*.test.*` files.
+    .filter((n) => !n.includes('.scenarios.')) // ignore `*.scenarios.*` files.
+
+  const services: Record<string, unknown> = {}
+
+  for (const file of files) {
+    services[path.basename(file, path.extname(file))] = require(file)
+  }
+
+  return services
 }
