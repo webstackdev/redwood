@@ -1,3 +1,4 @@
+import { context } from './globalContext'
 import { MakeServices } from './types'
 
 /**
@@ -12,16 +13,30 @@ export const makeServices: MakeServices = ({ services }) => {
 
     for (const [funcName, func] of Object.entries(service)) {
       if (funcName !== 'before') {
-        secureServices[serviceName][funcName] = (...args: Array<unknown>) => {
+        secureServices[serviceName][funcName] = async (
+          ...args: Array<unknown>
+        ) => {
           if (service.before) {
-            const beforeResult = service.before({ serviceName: funcName })
+            const beforeResult = service.before(
+              { serviceName: funcName },
+              { context }
+            )
             if (beforeResult || beforeResult === undefined) {
-              return func(...args)
+              const response = await func(...args)
+              if (service.after) {
+                return service.after({ response }, { context })
+              } else {
+                return response
+              }
             } else {
               throw new Error('Service aborted')
             }
           } else {
-            return func(...args)
+            if (service.after) {
+              return service.after({ response: func(...args) }, { context })
+            } else {
+              return func(...args)
+            }
           }
         }
       }
