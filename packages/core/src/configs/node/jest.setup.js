@@ -1,9 +1,10 @@
 const path = require('path')
 
-const { setContext } = require('@redwoodjs/api')
-const { getPaths } = require('@redwoodjs/internal')
+const { setContext, makeServices } = require('@redwoodjs/api')
+const { getPaths, importServices } = require('@redwoodjs/internal')
 const { defineScenario } = require('@redwoodjs/testing/dist/scenario')
 const { db } = require(path.join(getPaths().api.src, 'lib', 'db'))
+
 const DEFAULT_SCENARIO = 'standard'
 const PRISMA_RESERVED = ['create', 'connect']
 
@@ -113,6 +114,8 @@ window.defineScenario = defineScenario
 window.mockCurrentUser = (currentUser) => {
   setContext({ currentUser })
 }
+
+window.services = makeServices({ services: importServices() })
 
 afterAll(async () => {
   await db.$disconnect()
