@@ -117,6 +117,8 @@ export class PageLoader extends React.Component<Props> {
       slowModuleImport: false,
       params: props.params,
     })
+
+    window.scrollTo(0, 0)
   }
 
   render() {
