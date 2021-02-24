@@ -8,6 +8,7 @@ module.exports = {
   stories: [
     '../../../../web/src/**/*.stories.{tsx,jsx,js}',
   ],
+  addons: ['@storybook/addon-a11y'],
   webpackFinal: (sbConfig, { configType }) => {
     // configType is 'PRODUCTION' or 'DEVELOPMENT', why shout?
     const isEnvProduction = configType && configType.toLowerCase() === 'production'
