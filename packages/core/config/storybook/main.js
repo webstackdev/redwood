@@ -10,7 +10,9 @@ module.exports = {
   stories: [
     '../../../../web/src/**/*.stories.{tsx,jsx,js}',
   ],
-  addons: config.web.a11y ? ['@storybook/addon-a11y'] : undefined,
+  // spreading false (like ...false) into an object -> nothing (i.e. {});
+  // great for when we don't wan't to include the property.
+  ...(config.web.a11y && { addons: ['@storybook/addon-a11y'] }),
   webpackFinal: (sbConfig, { configType }) => {
     // configType is 'PRODUCTION' or 'DEVELOPMENT', why shout?
     const isEnvProduction = configType && configType.toLowerCase() === 'production'
