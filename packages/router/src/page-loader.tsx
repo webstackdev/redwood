@@ -92,6 +92,8 @@ export class PageLoader extends React.Component<Props> {
     }
   }
 
+  announcementRef = React.createRef<HTMLDivElement>()
+
   startPageLoadTransition = async (props: Props) => {
     const { spec, delay } = props
     const { loader, name } = spec
@@ -118,7 +120,55 @@ export class PageLoader extends React.Component<Props> {
       params: props.params,
     })
 
-    window.scrollTo(0, 0)
+    // scroll
+    //------------------------
+    // scrolls back to the top on `pushState` navigation
+
+    global?.scrollTo(0, 0)
+
+    // announce
+    //------------------------
+    // the order of priority is:
+    // 1. RouteAnnouncement
+    // 2. h1
+    // 3. document.title
+    // 4. location.pathname
+
+    let announcement
+
+    // do we need to watch out for `document` as well? (b/c prerender)
+    const routeAnnouncements = global?.document.querySelectorAll(
+      '[data-redwood-route-announcement]'
+    )
+    const pageHeading = global?.document.querySelector(`h1`)
+
+    if (routeAnnouncements.length) {
+      // @ts-ignore
+      announcement = routeAnnouncements[routeAnnouncements.length - 1].innerText
+    } else if (pageHeading) {
+      announcement = pageHeading.innerText
+    } else if (global?.document.title) {
+      announcement = document.title
+    } else {
+      announcement = `new page at ${global?.location.pathname}`
+    }
+
+    // @ts-ignore
+    this.announcementRef.current.innerText = announcement
+
+    // focus
+    //------------------------
+    // a lot still to do here
+    // 1. check if we've navigated straight to this page (if so, focus shouldn't be managed, per se)
+    // 2. automatically insert skip links (we'll have this configurable via a toml key, probably)
+
+    const focusWrapper = global?.document.querySelectorAll(
+      '[data-redwood-focus]'
+    )
+    if (focusWrapper.length) {
+      // @ts-ignore
+      focusWrapper[0].children[0].focus()
+    }
   }
 
   render() {
@@ -147,6 +197,22 @@ export class PageLoader extends React.Component<Props> {
             value={{ loading: this.state.slowModuleImport }}
           >
             <Page {...this.state.params} />
+            <div
+              style={{
+                position: `absolute`,
+                width: 1,
+                height: 1,
+                padding: 0,
+                overflow: `hidden`,
+                clip: `rect(0, 0, 0, 0)`,
+                whiteSpace: `nowrap`,
+                border: 0,
+              }}
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
+              ref={this.announcementRef}
+            ></div>
           </PageLoadingContext.Provider>
         </ParamsContext.Provider>
       )
